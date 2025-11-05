@@ -1,0 +1,19 @@
+{
+	"expo": {
+		"name": "With a Smile Letter",
+		"slug": "with-a-smile-letter",
+		"version": "1.0.0",
+		"orientation": "portrait",
+		"icon": "./assets/icon.png",
+		"splash": {
+			"image": "./assets/splash.png",
+			"resizeMode": "contain",
+			"backgroundColor": "#EEF2FF"
+		},
+		"assetBundlePatterns": ["**/*"],
+		"ios": { "supportsTablet": true },
+		"android": { "adaptiveIcon": { "foregroundImage": "./assets/adaptive-icon.png", "backgroundColor": "#EEF2FF" } },
+		"web": { "bundler": "metro" }
+	}
+}
+

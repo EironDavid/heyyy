@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>With a Smile</title>
+    <link rel="preload" as="audio" href="assets/audio/with-a-smile.mp3" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Handlee&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="pastel-bg">
+    <header class="top-controls">
+        <div class="controls-group">
+            <label for="trackSelect" class="visually-hidden">Select song</label>
+            <select id="trackSelect" class="select select-soft" aria-label="Select song">
+                <option value="song-1" selected>Song 1</option>
+                <option value="song-2">Song 2</option>
+            </select>
+            <span id="currentTrackLabel" class="current-track" aria-live="polite"></span>
+        </div>
+    </header>
+
+    <main class="main">
+        <div id="floatingLayer" aria-hidden="true"></div>
+
+        <!-- Right-side volume panel -->
+        <aside class="volume-panel" aria-label="Volume">
+            <div class="volume-wrap">
+                <label for="volumeSlider" class="volume-label">Volume</label>
+                <input id="volumeSlider" type="range" min="0" max="100" value="40" aria-valuemin="0" aria-valuemax="100" aria-valuenow="40" orient="vertical" />
+                <span id="volumePct" class="volume-pct">40%</span>
+            </div>
+        </aside>
+
+        <!-- Page 1: Envelope -->
+        <section id="page-1" class="page is-active" data-bg="soft">
+            <div class="center-wrap">
+                <div id="envelope" class="envelope" role="button" tabindex="0" aria-label="Open letter">
+				<div class="envelope__back"></div>
+				<div class="envelope__flap"></div>
+				<div class="envelope__letter">
+					<div class="mini-letter">
+						<span class="letter-heart" aria-hidden="true">💌</span>
+						<span class="letter-note handwriting">A letter for you.</span>
+					</div>
+				</div>
+                </div>
+                <div class="page-actions">
+                    <button id="openLetterBtn" class="btn btn-soft">Open Letter</button>
+                </div>
+            </div>
+        </section>
+
+        <div id="audioNotice" class="audio-notice" role="status" aria-live="polite" hidden>
+            <span class="audio-text">Tap to start music</span>
+            <button id="audioStartBtn" class="btn btn-soft">Play</button>
+        </div>
+
+        <!-- Page 2: Letter 1 -->
+        <section id="page-2" class="page" data-bg="glow">
+            <div class="center-wrap">
+                <div class="letter-card" id="letter-2">
+                    <p class="message handwriting" data-reveal="words">Hey, I know it’s been tough, but you’re here. That matters.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-soft nav-next" data-next="3">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Page 3: Letter 2 -->
+        <section id="page-3" class="page" data-bg="warm">
+            <div class="center-wrap">
+                <div class="letter-card" id="letter-3">
+                    <p class="message">You don’t have to be strong all the time. It’s okay to slow down.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-soft nav-back" data-back="2">← Back</button>
+                    <button class="btn btn-soft nav-next" data-next="4">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Page 4: Letter 3 -->
+        <section id="page-4" class="page" data-bg="float">
+            <div class="center-wrap">
+                <div class="letter-card" id="letter-4">
+                    <p class="message">You’ve made it through so much already. Even when you didn’t think you could, you did.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-soft nav-back" data-back="3">← Back</button>
+                    <button class="btn btn-soft nav-next" data-next="5">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Page 5: Letter 4 -->
+        <section id="page-5" class="page" data-bg="words">
+            <div class="center-wrap">
+                <div class="letter-card" id="letter-5">
+                    <p class="message" data-reveal="words">You deserve the same care you give away so freely.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-soft nav-back" data-back="4">← Back</button>
+                    <button class="btn btn-soft nav-next" data-next="6">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Page 6: Letter 5 -->
+        <section id="page-6" class="page" data-bg="light">
+            <div class="center-wrap">
+                <div class="letter-card" id="letter-6">
+                    <p class="message">If the world feels heavy, remember this space was made to remind you that you matter.</p>
+                    <button id="tinyHeart6" class="tiny-heart" aria-label="Reveal hidden message">❤</button>
+                    <p id="hiddenMsg6" class="hidden-msg handwriting" aria-live="polite">You’re loved more than you think.</p>
+                </div>
+                <div class="page-actions">
+                    <button class="btn btn-soft nav-back" data-back="5">← Back</button>
+                    <button class="btn btn-soft nav-next" data-next="7">Next →</button>
+                </div>
+            </div>
+        </section>
+
+        <!-- Page 7: Final Letter Page -->
+        <section id="page-7" class="page" data-bg="final">
+            <div class="center-wrap">
+                <div class="letter-card" id="letter-7">
+                    <p class="message handwriting">Take a deep breath. You’re safe here. You’re loved. Thank you for opening this letter.</p>
+                </div>
+                <div class="page-actions">
+                    <button id="replayBtn" class="btn btn-soft">Start Over</button>
+                </div>
+                <small class="date-note">Made for you on <span id="dateMarker"></span>.</small>
+            </div>
+        </section>
+    </main>
+
+    <footer id="siteFooter" class="footer">💌 Made with care, for you.</footer>
+
+    <audio id="bgm" preload="auto" autoplay playsinline></audio>
+
+	<script src="script.js"></script>
+</body>
+</html>
+
