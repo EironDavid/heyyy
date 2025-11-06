@@ -15,6 +15,7 @@
 	const hiddenMsg6 = document.getElementById('hiddenMsg6');
 	const dateMarker = document.getElementById('dateMarker');
 	const siteFooter = document.getElementById('siteFooter');
+    // Removed About elements
 
 	let attemptedAutoplay = false;
 	let playbackBlocked = false;
@@ -23,20 +24,32 @@
 
     const TRACKS = {
         'song-1': {
-            label: 'Song 1',
+            label: 'With a Smile',
             candidates: [
-                'assets/audio/song1.mp3',
+                'assets/audio/SpotiDown.App - With A Smile - Eraserheads.mp3',
                 'assets/audio/with-a-smile.mp3',
                 'with-a-smile.mp3',
-                'SpotiDown.App - With A Smile - Eraserheads.mp3'
+                'assets/audio/song1.mp3'
             ]
         },
         'song-2': {
-            label: 'Song 2',
+            label: 'Umaaraw, Umuulan',
             candidates: [
-                'assets/audio/song2.mp3',
+                'assets/audio/SpotiDown.App - Umaaraw_ Umuulan - Rivermaya.mp3',
                 'assets/audio/umaaraw-umuulan.mp3',
-                'Umaaraw Umuulan.mp3'
+                'Umaaraw Umuulan.mp3',
+                'assets/audio/song2.mp3'
+            ]
+        },
+        'song-3': {
+            label: 'Self Love',
+            candidates: [
+                'assets/audio/self love - song 3.mp3',
+                'assets/audio/self love.mp3',
+                'assets/audio/self-love.mp3',
+                'assets/audio/Self Love.mp3',
+                'assets/audio/self_love.mp3',
+                'assets/audio/selflove.mp3'
             ]
         }
     };
@@ -73,18 +86,36 @@
         // Try candidates in order; load first one that plays
         const candidates = TRACKS[trackId].candidates.slice();
         const tryNext = () => {
-            if (!candidates.length) { showAudioNotice(); return; }
+            if (!candidates.length) { return; }
             const src = candidates.shift();
             audio.onerror = () => tryNext();
-            audio.oncanplay = null;
+            
+            // Set up handler to play when audio is ready
+            const playWhenReady = () => {
+                audio.oncanplay = null;
+                tryPlay();
+            };
+            
             if (audio.getAttribute('src') !== src) {
+                // New source - set it and wait for it to load
                 audio.setAttribute('src', src);
                 audio.load();
+                audio.oncanplay = playWhenReady;
+                // If already ready, play immediately
+                if (audio.readyState >= 3) {
+                    playWhenReady();
+                }
+            } else {
+                // Same source - try playing if ready, otherwise wait
+                if (audio.readyState >= 3) {
+                    tryPlay();
+                } else {
+                    audio.oncanplay = playWhenReady;
+                }
             }
         };
         tryNext();
         if (currentTrackLabel) currentTrackLabel.textContent = TRACKS[trackId].label;
-        tryPlay();
 		try { localStorage.setItem('selectedTrack', trackId); } catch (_) {}
 	}
 
@@ -95,19 +126,36 @@
             const userTarget = getUserTargetVolume();
             audio.volume = Math.max(MIN_VOLUME, userTarget);
         } catch (_) {}
-		const playPromise = audio.play();
-		if (playPromise && typeof playPromise.then === 'function') {
-			playPromise.then(() => {
-				playbackBlocked = false;
-				updateMuteButton();
-                softFadeInAudio();
-            }).catch(() => {
-				// Likely blocked by autoplay policies; wait for user interaction
-				playbackBlocked = true;
-				updateMuteButton();
-                showAudioNotice();
-			});
-		}
+
+        // Try unmuted first; if blocked, fall back to muted, then immediately unmute on success
+        const attemptPlay = (mutedFirst) => {
+            const previousMuted = audio.muted;
+            audio.muted = !!mutedFirst;
+            const p = audio.play();
+            if (p && typeof p.then === 'function') {
+                p.then(() => {
+                    playbackBlocked = false;
+                    // Unmute immediately once playback has started
+                    audio.muted = false;
+                    updateMuteButton();
+                    softFadeInAudio();
+                }).catch(() => {
+                    // Restore prior state and mark as blocked
+                    audio.muted = previousMuted;
+                    playbackBlocked = true;
+                    updateMuteButton();
+                    // If we tried unmuted and it failed, try muted next
+                    if (!mutedFirst) {
+                        attemptPlay(true);
+                    }
+                });
+            } else {
+                // Non-promise browsers: ensure unmuted
+                audio.muted = false;
+            }
+        };
+
+        attemptPlay(false);
 	}
 
 	function updateMuteButton() {
@@ -157,8 +205,8 @@
 			// reseal envelope when returning
 			envelope?.classList.remove('is-open');
 		}
-		if (pageNum === 5) ensureFloatingHearts();
-		if (pageNum !== 5 && floatingLayer) floatingLayer.innerHTML = '';
+        // Always show gentle floating drawings on every page
+        ensureFloatingHearts();
     // Word-by-word reveals
     document.querySelectorAll(`#page-${pageNum} [data-reveal="words"]`).forEach(runWordReveal);
     // Ensure other messages on this page are visible
@@ -169,13 +217,12 @@
 			siteFooter.textContent = pageNum === 7 ? '💌 Always here, even in silence.' : '💌 Made with care, for you.';
 		}
 
-		// Final page: fade out letter and music softly after a short pause
+		// Final page: keep music playing (no fade out)
 		if (pageNum === 7) {
 			setTimeout(() => {
 				const letter = document.getElementById('letter-7');
 				if (letter) letter.classList.add('is-fading');
-				softFadeOutAudio();
-			}, 2000);
+			}, 20000);
 		}
 	}
 
@@ -193,19 +240,21 @@
 		add();
 	}
 
-	function ensureFloatingHearts() {
-		if (!floatingLayer) return;
-		floatingLayer.innerHTML = '';
-		for (let i = 0; i < 14; i++) {
-			const h = document.createElement('div');
-			h.className = 'float-heart';
-			h.textContent = Math.random() < 0.5 ? '♥' : '❀';
-			h.style.left = Math.floor(Math.random() * 100) + 'vw';
-			h.style.animationDelay = (Math.random() * 10) + 's';
-			h.style.opacity = String(0.2 + Math.random() * 0.3);
-			floatingLayer.appendChild(h);
-		}
-	}
+function ensureFloatingHearts() {
+    if (!floatingLayer) return;
+    floatingLayer.innerHTML = '';
+    const glyphs = ['♥','❀','✿','★','☆','✧','✦','♪','♫'];
+    for (let i = 0; i < 22; i++) {
+        const h = document.createElement('div');
+        h.className = 'float-heart';
+        h.textContent = glyphs[Math.floor(Math.random() * glyphs.length)];
+        h.style.left = Math.floor(Math.random() * 100) + 'vw';
+        h.style.animationDelay = (Math.random() * 12) + 's';
+        h.style.opacity = String(0.18 + Math.random() * 0.35);
+        h.style.fontSize = String(12 + Math.floor(Math.random() * 16)) + 'px';
+        floatingLayer.appendChild(h);
+    }
+}
 
 	function softFadeOutAudio() {
 		if (!audio) return;
@@ -268,18 +317,9 @@
 	if (replayMusicBtn) replayMusicBtn.addEventListener('click', () => { try { audio.currentTime = 0; } catch(_){} tryPlay(); });
 	if (tinyHeart6 && hiddenMsg6) tinyHeart6.addEventListener('click', () => hiddenMsg6.classList.toggle('is-visible'));
 
-    // Audio notice helpers
-    const audioNotice = document.getElementById('audioNotice');
-    const audioStartBtn = document.getElementById('audioStartBtn');
-    function showAudioNotice() {
-        if (!audioNotice) return;
-        audioNotice.hidden = false;
-    }
-    function hideAudioNotice() {
-        if (!audioNotice) return;
-        audioNotice.hidden = true;
-    }
-    if (audioStartBtn) audioStartBtn.addEventListener('click', () => { hideAudioNotice(); tryPlay(); });
+    // About modal removed per request
+
+    // Removed audio notice UI and helpers
 
 	document.addEventListener('click', (e) => {
 		const target = e.target;
@@ -288,21 +328,13 @@
 	});
 
     document.addEventListener('DOMContentLoaded', () => {
-		if (!attemptedAutoplay) {
-			attemptedAutoplay = true;
-			// Initialize track from saved preference
-			try {
-				const saved = localStorage.getItem('selectedTrack');
-				if (saved && TRACKS[saved]) {
-					if (trackSelect) trackSelect.value = saved;
-					setTrack(saved);
-				} else {
-					setTrack(currentTrackId);
-				}
-			} catch (_) {
-				setTrack(currentTrackId);
-			}
-		}
+        if (!attemptedAutoplay) {
+            attemptedAutoplay = true;
+            // Always start with Song 1 on first load
+            currentTrackId = 'song-1';
+            if (trackSelect) trackSelect.value = 'song-1';
+            setTrack('song-1');
+        }
 		updateMuteButton();
         // Ensure minimum starting volume or user target
         try {
@@ -324,5 +356,24 @@
 		const hash = location.hash.replace('#','');
 		navigateTo(hash ? parseInt(hash, 10) || 1 : 1);
 	});
+	
+	// Try to unlock audio on any user interaction (click, touch, keydown)
+	document.addEventListener('click', () => {
+		if (playbackBlocked && audio && audio.paused) {
+			tryPlay();
+		}
+	}, { once: true });
+	
+	document.addEventListener('touchstart', () => {
+		if (playbackBlocked && audio && audio.paused) {
+			tryPlay();
+		}
+	}, { once: true });
+	
+	document.addEventListener('keydown', () => {
+		if (playbackBlocked && audio && audio.paused) {
+			tryPlay();
+		}
+	}, { once: true });
 })();
 
