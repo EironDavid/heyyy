@@ -28,30 +28,33 @@
         'song-1': {
             label: 'With a Smile',
             candidates: [
-                'assets/audio/SpotiDown.App - With A Smile - Eraserheads.mp3',
+                'assets/audio/With a smile.mp3',
                 'assets/audio/with-a-smile.mp3',
                 'with-a-smile.mp3',
+                'assets/audio/SpotiDown.App - With A Smile - Eraserheads.mp3',
                 'assets/audio/song1.mp3'
             ]
         },
         'song-2': {
             label: 'Umaaraw, Umuulan',
             candidates: [
-                'assets/audio/SpotiDown.App - Umaaraw_ Umuulan - Rivermaya.mp3',
+                'assets/audio/Umaaraw umuulan.mp3',
                 'assets/audio/umaaraw-umuulan.mp3',
                 'Umaaraw Umuulan.mp3',
+                'assets/audio/SpotiDown.App - Umaaraw_ Umuulan - Rivermaya.mp3',
                 'assets/audio/song2.mp3'
             ]
         },
         'song-3': {
             label: 'Self Love',
             candidates: [
-                'assets/audio/self love - song 3.mp3',
+                'assets/audio/Self love.mp3',
                 'assets/audio/self love.mp3',
                 'assets/audio/self-love.mp3',
                 'assets/audio/Self Love.mp3',
                 'assets/audio/self_love.mp3',
-                'assets/audio/selflove.mp3'
+                'assets/audio/selflove.mp3',
+                'assets/audio/self love - song 3.mp3'
             ]
         }
     };
