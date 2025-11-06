@@ -19,6 +19,8 @@
 
 	let attemptedAutoplay = false;
 	let playbackBlocked = false;
+    let retryIntervalId = null;
+    let retryCount = 0;
     let currentTrackId = 'song-1';
 	let activePage = 1;
 
@@ -139,6 +141,9 @@
                     audio.muted = false;
                     updateMuteButton();
                     softFadeInAudio();
+                    // Stop any retries once playing
+                    if (retryIntervalId) { clearInterval(retryIntervalId); retryIntervalId = null; }
+                    retryCount = 0;
                 }).catch(() => {
                     // Restore prior state and mark as blocked
                     audio.muted = previousMuted;
@@ -148,6 +153,8 @@
                     if (!mutedFirst) {
                         attemptPlay(true);
                     }
+                    // Start retry loop to bypass strict autoplay policies
+                    startAutoRetry();
                 });
             } else {
                 // Non-promise browsers: ensure unmuted
@@ -157,6 +164,18 @@
 
         attemptPlay(false);
 	}
+
+    function startAutoRetry() {
+        if (retryIntervalId) return;
+        retryCount = 0;
+        retryIntervalId = setInterval(() => {
+            if (!audio) { clearInterval(retryIntervalId); retryIntervalId = null; return; }
+            if (!audio.paused && !audio.muted) { clearInterval(retryIntervalId); retryIntervalId = null; return; }
+            tryPlay();
+            retryCount++;
+            if (retryCount >= 20) { clearInterval(retryIntervalId); retryIntervalId = null; }
+        }, 1500);
+    }
 
 	function updateMuteButton() {
 		if (!audio) return;
@@ -334,6 +353,8 @@ function ensureFloatingHearts() {
             currentTrackId = 'song-1';
             if (trackSelect) trackSelect.value = 'song-1';
             setTrack('song-1');
+            // Kick off retries in case autoplay is blocked initially
+            startAutoRetry();
         }
 		updateMuteButton();
         // Ensure minimum starting volume or user target
@@ -357,23 +378,27 @@ function ensureFloatingHearts() {
 		navigateTo(hash ? parseInt(hash, 10) || 1 : 1);
 	});
 	
-	// Try to unlock audio on any user interaction (click, touch, keydown)
-	document.addEventListener('click', () => {
+    // Try to unlock audio on any user interaction (click, touch, keydown)
+    document.addEventListener('click', () => {
 		if (playbackBlocked && audio && audio.paused) {
 			tryPlay();
 		}
-	}, { once: true });
+    });
 	
-	document.addEventListener('touchstart', () => {
+    document.addEventListener('touchstart', () => {
 		if (playbackBlocked && audio && audio.paused) {
 			tryPlay();
 		}
-	}, { once: true });
+    });
 	
-	document.addEventListener('keydown', () => {
+    document.addEventListener('keydown', () => {
 		if (playbackBlocked && audio && audio.paused) {
 			tryPlay();
 		}
-	}, { once: true });
+    });
+
+    // Also attempt on focus/visibility changes (helpful when opening in a new tab)
+    window.addEventListener('focus', () => { if (audio && (audio.paused || audio.muted)) tryPlay(); });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { if (audio && (audio.paused || audio.muted)) tryPlay(); } });
 })();
 
